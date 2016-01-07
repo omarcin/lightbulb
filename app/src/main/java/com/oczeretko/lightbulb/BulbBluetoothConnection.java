@@ -5,13 +5,18 @@ import android.bluetooth.le.*;
 import android.content.*;
 import android.os.*;
 import android.text.format.*;
+import android.util.*;
 
 import java.util.*;
 
 public class BulbBluetoothConnection {
 
+    private static final String TAG = "BulbConnection";
+
     public interface Listener {
         void onBulbConnected();
+
+        void onBulbDisconnected();
 
         void onBulbCommandSent();
     }
@@ -33,7 +38,7 @@ public class BulbBluetoothConnection {
 
     public BulbBluetoothConnection(Context context, Listener listener) {
         this.context = context;
-        this.listener = listener;
+        this.listener = new ListenerUiThreadAdapter(listener);
     }
 
     public void open() {
@@ -57,6 +62,7 @@ public class BulbBluetoothConnection {
         }
         if (bulbGatt != null) {
             bulbGatt.disconnect();
+            bulbGatt.close();
             bulbGatt = null;
         }
         if (leScanner != null) {
@@ -69,39 +75,68 @@ public class BulbBluetoothConnection {
     }
 
     private void onBluetoothEnabled() {
-        leScanner = bluetoothAdapter.getBluetoothLeScanner();
-        ScanFilter scanFilter = new ScanFilter.Builder().setServiceUuid(new ParcelUuid(SERVICE_ID)).build();
-        ScanSettings scanSettings = new ScanSettings.Builder().setScanMode(ScanSettings.SCAN_MODE_BALANCED).build();
-        leScanner.startScan(Arrays.asList(scanFilter), scanSettings, scanCallback);
-        handler.postDelayed(() -> leScanner.stopScan(scanCallback), SCAN_TIME);
+        Log.d(TAG, "on Bluetooth enabled");
+        if (leScanner == null) {
+            Log.d(TAG, "Initiating ble scan.");
+            leScanner = bluetoothAdapter.getBluetoothLeScanner();
+            ScanFilter scanFilter = new ScanFilter.Builder().setServiceUuid(new ParcelUuid(SERVICE_ID)).build();
+            ScanSettings scanSettings = new ScanSettings.Builder().setScanMode(ScanSettings.SCAN_MODE_BALANCED).build();
+            leScanner.startScan(Arrays.asList(scanFilter), scanSettings, scanCallback);
+            handler.postDelayed(this::onScanTimeout, SCAN_TIME);
+        } else {
+            Log.d(TAG, "Already scanning");
+        }
+    }
+
+    private void onScanTimeout() {
+        Log.d(TAG, "ble scan timeout");
+        if (leScanner != null) {
+            leScanner.stopScan(scanCallback);
+            leScanner = null;
+        }
+        listener.onBulbDisconnected();
     }
 
     private void onBluetoothDisabled() {
-        // TODO
+        Log.d(TAG, "on Bluetooth disabled");
+        wasBluetoothDisabled = false;
+        listener.onBulbDisconnected();
     }
 
     private void onBluetoothDeviceFound(BluetoothDevice device) {
+        Log.d(TAG, "Bluetooth device found");
         handler.removeCallbacksAndMessages(null);
         leScanner.stopScan(scanCallback);
         leScanner = null;
         bulbGatt = device.connectGatt(context, false, new BluetoothGattCallback() {
             @Override
             public void onCharacteristicWrite(BluetoothGatt gatt, BluetoothGattCharacteristic characteristic, int status) {
-                listener.onBulbCommandSent();
+                Log.d(TAG, "GATT - characteristic write " + status);
+                if (status == BluetoothGatt.GATT_SUCCESS) {
+                    listener.onBulbCommandSent();
+                } else {
+                    listener.onBulbDisconnected();
+                }
             }
 
             @Override
             public void onConnectionStateChange(BluetoothGatt gatt, int status, int newState) {
+                Log.d(TAG, "GATT - state change " + newState);
                 if (newState == BluetoothGatt.STATE_CONNECTED) {
                     bulbGatt.discoverServices();
                 } else if (newState == BluetoothGatt.STATE_DISCONNECTED) {
-                    // TODO
+                    listener.onBulbDisconnected();
                 }
             }
 
             @Override
             public void onServicesDiscovered(BluetoothGatt gatt, int status) {
-                onBluetoothDeviceReady();
+                Log.d(TAG, "GATT - Services discovered " + status);
+                if (status == BluetoothGatt.GATT_SUCCESS) {
+                    onBluetoothDeviceReady();
+                } else {
+                    listener.onBulbDisconnected();
+                }
             }
         });
     }
@@ -115,6 +150,7 @@ public class BulbBluetoothConnection {
     }
 
     private void onBluetoothDeviceReady() {
+        Log.d(TAG, "Device ready");
         listener.onBulbConnected();
     }
 
@@ -124,9 +160,12 @@ public class BulbBluetoothConnection {
         public void onReceive(Context context, Intent intent) {
             switch (intent.getIntExtra(BluetoothAdapter.EXTRA_STATE, -1)) {
                 case BluetoothAdapter.STATE_ON:
+                    Log.d(TAG, "Bluetooth state ON");
                     onBluetoothEnabled();
                     break;
-                default:
+                case BluetoothAdapter.STATE_OFF:
+                case BluetoothAdapter.ERROR:
+                    Log.d(TAG, "Bluetooth state OFF/ERROR");
                     onBluetoothDisabled();
                     break;
             }
@@ -136,7 +175,38 @@ public class BulbBluetoothConnection {
     private class BluetoothScanCallback extends ScanCallback {
         @Override
         public void onScanResult(int callbackType, ScanResult result) {
+            Log.d(TAG, "onScanResult " + callbackType);
             onBluetoothDeviceFound(result.getDevice());
+        }
+
+        @Override
+        public void onScanFailed(int errorCode) {
+            Log.d(TAG, "onScanFailed " + errorCode);
+            listener.onBulbDisconnected();
+        }
+    }
+
+    private class ListenerUiThreadAdapter implements Listener {
+
+        private final Listener innerListener;
+
+        public ListenerUiThreadAdapter(Listener listener) {
+            innerListener = listener;
+        }
+
+        @Override
+        public void onBulbConnected() {
+            handler.post(innerListener::onBulbConnected);
+        }
+
+        @Override
+        public void onBulbDisconnected() {
+            handler.post(innerListener::onBulbDisconnected);
+        }
+
+        @Override
+        public void onBulbCommandSent() {
+            handler.post(innerListener::onBulbCommandSent);
         }
     }
 }
