@@ -34,4 +34,12 @@ public class MainActivity extends AppCompatActivity {
     public void disconnect(View view) {
         controller.close();
     }
+
+    public void turnOn(View view) {
+        controller.turnOn();
+    }
+
+    public void turnOff(View view) {
+        controller.turnOff();
+    }
 }

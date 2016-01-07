@@ -26,9 +26,19 @@ public class BulbController implements BulbBluetoothConnection.Listener {
         connection.close();
     }
 
+    public void turnOn() {
+        connection.sendCommand(VALUE_ON);
+    }
+
+    public void turnOff() {
+        connection.sendCommand(VALUE_OFF);
+    }
+
     @Override
     public void onBulbConnected() {
         Toast.makeText(context, "CONNECTED", Toast.LENGTH_SHORT).show();
+        connection.sendCommand(VALUE_INIT1);
+        connection.sendCommand(VALUE_INIT2);
     }
 
     @Override

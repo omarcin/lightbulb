@@ -25,4 +25,19 @@
         android:text="Disconnect"
         />
 
+    <Button
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:onClick="turnOn"
+        android:text="On"
+        />
+
+
+    <Button
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:onClick="turnOff"
+        android:text="Off"
+        />
+
 </LinearLayout>
