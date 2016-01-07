@@ -1,16 +1,25 @@
 package com.oczeretko.lightbulb;
 
 import android.content.*;
-import android.widget.*;
 
 import java.util.*;
 
 public class BulbController implements BulbBluetoothConnection.Listener {
 
-    private static byte[] VALUE_INIT1 = {33, 0, 0, 0, 0, 0, 0, 0, 0};
-    private static byte[] VALUE_INIT2 = {21, 0, 0, 0, 0, 0, 0, 0, 0};
-    private static byte[] VALUE_ON = {20, 0, 0, 0, -1, 0, 0, 0, 0};
-    private static byte[] VALUE_OFF = {20, 0, 0, 0, 37, 0, 0, 0, 0};
+
+    private final static int MAX_LEVEL = 100;
+    private final static int MIN_LEVEL = 1;
+
+    private final static int MAX_VALUE = 0xFF;
+    private final static int MIN_VALUE = 0x25;
+
+    private final static byte[] COMMAND_INIT1 = {33, 0, 0, 0, 0, 0, 0, 0, 0};
+    private final static byte[] COMMAND_INIT2 = {21, 0, 0, 0, 0, 0, 0, 0, 0};
+
+    private final static int COMMAND_INDEX_LIGHT_LEVEL = 4;
+    private final static byte[] COMMAND_TEMPLATE = {20, 0, 0, 0, 0 /* light level */, 0, 0, 0, 0};
+    private final static byte[] COMMAND_ON = commandForValue(MAX_VALUE);
+    private final static byte[] COMMAND_OFF = commandForValue(MIN_VALUE);
 
     private final Context context;
     private BulbBluetoothConnection connection;
@@ -22,6 +31,7 @@ public class BulbController implements BulbBluetoothConnection.Listener {
     }
 
     public void close() {
+        commands.clear();
         if (connection != null) {
             connection.close();
             connection = null;
@@ -29,11 +39,11 @@ public class BulbController implements BulbBluetoothConnection.Listener {
     }
 
     public void turnOn() {
-        queueCommand(VALUE_ON);
+        queueCommand(COMMAND_ON);
     }
 
     public void turnOff() {
-        queueCommand(VALUE_OFF);
+        queueCommand(COMMAND_OFF);
     }
 
     private void queueCommand(byte[] command) {
@@ -47,8 +57,8 @@ public class BulbController implements BulbBluetoothConnection.Listener {
             isIdle = false;
             connection = new BulbBluetoothConnection(context, this);
             connection.open();
-            commands.offer(VALUE_INIT1);
-            commands.offer(VALUE_INIT2);
+            commands.offer(COMMAND_INIT1);
+            commands.offer(COMMAND_INIT2);
         }
     }
 
@@ -60,14 +70,12 @@ public class BulbController implements BulbBluetoothConnection.Listener {
 
     @Override
     public void onBulbConnected() {
-        Toast.makeText(context, "CONNECTED", Toast.LENGTH_SHORT).show();
         isIdle = true;
         executeIfReady();
     }
 
     @Override
     public void onBulbDisconnected() {
-        Toast.makeText(context, "DISCONNECTED", Toast.LENGTH_SHORT).show();
         // TODO
         close();
     }
@@ -76,5 +84,19 @@ public class BulbController implements BulbBluetoothConnection.Listener {
     public void onBulbCommandSent() {
         isIdle = true;
         executeIfReady();
+    }
+
+    public void setLevel(int value) {
+        value = Math.min(Math.max(value, MIN_LEVEL), MAX_LEVEL);
+        byte[] command = commandForValue(value);
+        queueCommand(command);
+    }
+
+    private static byte[] commandForValue(int value) {
+        double fraction = ((double)value) / MAX_VALUE;
+        int commandValue = (int)(fraction * (MAX_VALUE - MIN_VALUE)) + MIN_VALUE;
+        byte[] command = Arrays.copyOf(COMMAND_TEMPLATE, COMMAND_TEMPLATE.length);
+        command[COMMAND_INDEX_LIGHT_LEVEL] = (byte)commandValue;
+        return command;
     }
 }

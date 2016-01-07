@@ -6,36 +6,37 @@ import android.view.*;
 
 public class MainActivity extends AppCompatActivity {
 
-    private BulbController controller;
-
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
     }
 
-    @Override
-    protected void onResume() {
-        super.onResume();
-        controller = new BulbController(this);
+    public void turn25(View view) {
+        startService(LightBulbService.getIntentSetLevel(this, 25));
     }
 
-    @Override
-    protected void onPause() {
-        super.onPause();
-        controller.close();
-        controller = null;
+    public void turn50(View view) {
+        startService(LightBulbService.getIntentSetLevel(this, 50));
     }
 
-    public void disconnect(View view) {
-        controller.close();
+    public void turn75(View view) {
+        startService(LightBulbService.getIntentSetLevel(this, 75));
+    }
+
+    public void turn100(View view) {
+        startService(LightBulbService.getIntentSetLevel(this, 100));
     }
 
     public void turnOn(View view) {
-        controller.turnOn();
+        startService(LightBulbService.getIntentTurnOn(this));
     }
 
     public void turnOff(View view) {
-        controller.turnOff();
+        startService(LightBulbService.getIntentTurnOff(this));
+    }
+
+    public void disconnect(View view) {
+        startService(LightBulbService.getIntentDisconnect(this));
     }
 }
