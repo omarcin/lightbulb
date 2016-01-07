@@ -3,6 +3,8 @@ package com.oczeretko.lightbulb;
 import android.content.*;
 import android.widget.*;
 
+import java.util.*;
+
 public class BulbController implements BulbBluetoothConnection.Listener {
 
     private static byte[] VALUE_INIT1 = {33, 0, 0, 0, 0, 0, 0, 0, 0};
@@ -10,43 +12,69 @@ public class BulbController implements BulbBluetoothConnection.Listener {
     private static byte[] VALUE_ON = {20, 0, 0, 0, -1, 0, 0, 0, 0};
     private static byte[] VALUE_OFF = {20, 0, 0, 0, 37, 0, 0, 0, 0};
 
-    private final BulbBluetoothConnection connection;
     private final Context context;
+    private BulbBluetoothConnection connection;
+    private final Queue<byte[]> commands = new LinkedList<>();
+    private boolean isIdle;
 
     public BulbController(Context context) {
         this.context = context;
-        connection = new BulbBluetoothConnection(context, this);
-    }
-
-    public void initialize() {
-        connection.open();
     }
 
     public void close() {
-        connection.close();
+        if (connection != null) {
+            connection.close();
+            connection = null;
+        }
     }
 
     public void turnOn() {
-        connection.sendCommand(VALUE_ON);
+        queueCommand(VALUE_ON);
     }
 
     public void turnOff() {
-        connection.sendCommand(VALUE_OFF);
+        queueCommand(VALUE_OFF);
+    }
+
+    private void queueCommand(byte[] command) {
+        ensureConnection();
+        commands.offer(command);
+        executeIfReady();
+    }
+
+    private void ensureConnection() {
+        if (connection == null) {
+            isIdle = false;
+            connection = new BulbBluetoothConnection(context, this);
+            connection.open();
+            commands.offer(VALUE_INIT1);
+            commands.offer(VALUE_INIT2);
+        }
+    }
+
+    private void executeIfReady() {
+        if (isIdle && !commands.isEmpty()) {
+            connection.sendCommand(commands.poll());
+        }
     }
 
     @Override
     public void onBulbConnected() {
         Toast.makeText(context, "CONNECTED", Toast.LENGTH_SHORT).show();
-        connection.sendCommand(VALUE_INIT1);
-        connection.sendCommand(VALUE_INIT2);
+        isIdle = true;
+        executeIfReady();
     }
 
     @Override
     public void onBulbDisconnected() {
         Toast.makeText(context, "DISCONNECTED", Toast.LENGTH_SHORT).show();
+        // TODO
+        close();
     }
 
     @Override
     public void onBulbCommandSent() {
+        isIdle = true;
+        executeIfReady();
     }
 }

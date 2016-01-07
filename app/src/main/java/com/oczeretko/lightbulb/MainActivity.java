@@ -27,10 +27,6 @@ public class MainActivity extends AppCompatActivity {
         controller = null;
     }
 
-    public void connect(View view) {
-        controller.initialize();
-    }
-
     public void disconnect(View view) {
         controller.close();
     }
