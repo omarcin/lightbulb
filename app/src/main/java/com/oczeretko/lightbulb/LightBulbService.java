@@ -3,8 +3,11 @@ package com.oczeretko.lightbulb;
 import android.app.*;
 import android.content.*;
 import android.os.*;
+import android.util.*;
 
 public class LightBulbService extends Service {
+
+    private final static String TAG = "LightBulbService";
 
     private final static String ACTION_ON = "LightBulbService.ON";
     private final static String ACTION_OFF = "LightBulbService.OFF";
@@ -36,27 +39,33 @@ public class LightBulbService extends Service {
         return intent;
     }
 
+    private BulbController controller;
+    private int timeToLiveMillis;
+
     private final Handler stopSelfHandler = new Handler(msg -> {
+        Log.d(TAG, "Handler - stopping service.");
+        if (controller != null) {
+            controller.close();
+        }
         stopSelf();
         return true;
     });
 
-    private BulbController controller;
-    private int timeToLiveMillis;
-
     @Override
     public void onCreate() {
         super.onCreate();
+        Log.d(TAG, "onCreate");
         controller = new BulbController(this);
         timeToLiveMillis = getResources().getInteger(R.integer.service_lightbulb_ttlinmillis);
     }
 
     @Override
     public int onStartCommand(Intent intent, int flags, int startId) {
-        if (intent == null) {
+        if (intent == null || intent.getAction() == null) {
             return START_NOT_STICKY;
         }
 
+        Log.d(TAG, "Received intent " + intent.getAction());
         stopSelfHandler.sendEmptyMessageDelayed(0, timeToLiveMillis);
 
         switch (intent.getAction()) {
@@ -81,15 +90,16 @@ public class LightBulbService extends Service {
     }
 
     @Override
-    public IBinder onBind(Intent intent) {
-        throw new UnsupportedOperationException("Not yet implemented");
-    }
-
-    @Override
     public void onDestroy() {
         super.onDestroy();
+        Log.d(TAG, "onDestroy");
         stopSelfHandler.removeCallbacksAndMessages(null);
         controller.close();
         controller = null;
+    }
+
+    @Override
+    public IBinder onBind(Intent intent) {
+        throw new UnsupportedOperationException("Not a bound service");
     }
 }
