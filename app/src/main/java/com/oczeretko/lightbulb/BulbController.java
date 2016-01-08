@@ -6,7 +6,6 @@ import java.util.*;
 
 public class BulbController implements BulbBluetoothConnection.Listener {
 
-
     private final static int MAX_LEVEL = 100;
     private final static int MIN_LEVEL = 1;
 
