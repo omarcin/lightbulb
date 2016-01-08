@@ -4,7 +4,7 @@ import android.content.*;
 
 import java.util.*;
 
-public class BulbController implements BulbBluetoothConnection.Listener {
+public class BulbController {
 
     private final static int MAX_LEVEL = 100;
     private final static int MIN_LEVEL = 1;
@@ -21,6 +21,7 @@ public class BulbController implements BulbBluetoothConnection.Listener {
     private final static byte[] COMMAND_OFF = commandForValue(MIN_VALUE);
 
     private final Context context;
+    private final BulbBluetoothConnectionListener connectionListener = new BulbBluetoothConnectionListener();
     private BulbBluetoothConnection connection;
     private final Queue<byte[]> commands = new LinkedList<>();
     private boolean isIdle;
@@ -54,7 +55,7 @@ public class BulbController implements BulbBluetoothConnection.Listener {
     private void ensureConnection() {
         if (connection == null) {
             isIdle = false;
-            connection = new BulbBluetoothConnection(context, this);
+            connection = new BulbBluetoothConnection(context, connectionListener);
             connection.open();
             commands.offer(COMMAND_INIT1);
             commands.offer(COMMAND_INIT2);
@@ -65,24 +66,6 @@ public class BulbController implements BulbBluetoothConnection.Listener {
         if (isIdle && !commands.isEmpty()) {
             connection.sendCommand(commands.poll());
         }
-    }
-
-    @Override
-    public void onBulbConnected() {
-        isIdle = true;
-        executeIfReady();
-    }
-
-    @Override
-    public void onBulbDisconnected() {
-        // TODO
-        close();
-    }
-
-    @Override
-    public void onBulbCommandSent() {
-        isIdle = true;
-        executeIfReady();
     }
 
     public void setLevel(int value) {
@@ -97,5 +80,25 @@ public class BulbController implements BulbBluetoothConnection.Listener {
         byte[] command = Arrays.copyOf(COMMAND_TEMPLATE, COMMAND_TEMPLATE.length);
         command[COMMAND_INDEX_LIGHT_LEVEL] = (byte)commandValue;
         return command;
+    }
+
+    private class BulbBluetoothConnectionListener implements BulbBluetoothConnection.Listener {
+        @Override
+        public void onBulbConnected() {
+            isIdle = true;
+            executeIfReady();
+        }
+
+        @Override
+        public void onBulbDisconnected() {
+            // TODO
+            close();
+        }
+
+        @Override
+        public void onBulbCommandSent() {
+            isIdle = true;
+            executeIfReady();
+        }
     }
 }
