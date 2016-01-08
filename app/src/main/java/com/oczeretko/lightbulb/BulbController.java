@@ -17,8 +17,8 @@ public class BulbController {
 
     private final static int COMMAND_INDEX_LIGHT_LEVEL = 4;
     private final static byte[] COMMAND_TEMPLATE = {20, 0, 0, 0, 0 /* light level */, 0, 0, 0, 0};
-    private final static byte[] COMMAND_ON = commandForValue(MAX_VALUE);
-    private final static byte[] COMMAND_OFF = commandForValue(MIN_VALUE);
+    private final static byte[] COMMAND_ON = commandForLightLevel(MAX_LEVEL);
+    private final static byte[] COMMAND_OFF = commandForLightLevel(0);
 
     private final Context context;
     private final BulbBluetoothConnectionListener connectionListener = new BulbBluetoothConnectionListener();
@@ -68,14 +68,14 @@ public class BulbController {
         }
     }
 
-    public void setLevel(int value) {
-        value = Math.min(Math.max(value, MIN_LEVEL), MAX_LEVEL);
-        byte[] command = commandForValue(value);
+    public void setLevel(int lightLevel) {
+        lightLevel = Math.min(Math.max(lightLevel, MIN_LEVEL), MAX_LEVEL);
+        byte[] command = commandForLightLevel(lightLevel);
         queueCommand(command);
     }
 
-    private static byte[] commandForValue(int value) {
-        double fraction = ((double)value) / MAX_VALUE;
+    private static byte[] commandForLightLevel(int lightLevel) {
+        double fraction = ((double)lightLevel) / MAX_LEVEL;
         int commandValue = (int)(fraction * (MAX_VALUE - MIN_VALUE)) + MIN_VALUE;
         byte[] command = Arrays.copyOf(COMMAND_TEMPLATE, COMMAND_TEMPLATE.length);
         command[COMMAND_INDEX_LIGHT_LEVEL] = (byte)commandValue;
