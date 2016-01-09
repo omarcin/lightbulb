@@ -40,6 +40,7 @@ public class LightBulbService extends Service {
     }
 
     private BulbController controller;
+    private BulbCustomTile tile;
     private int timeToLiveMillis;
 
     private final Handler stopSelfHandler = new Handler(msg -> {
@@ -56,6 +57,7 @@ public class LightBulbService extends Service {
         super.onCreate();
         Log.d(TAG, "onCreate");
         controller = new BulbController(this);
+        tile = new BulbCustomTile(this);
         timeToLiveMillis = getResources().getInteger(R.integer.service_lightbulb_ttlinmillis);
     }
 
@@ -70,10 +72,12 @@ public class LightBulbService extends Service {
 
         switch (intent.getAction()) {
             case ACTION_ON:
+                tile.publishTurnOffTile();
                 controller.turnOn();
                 break;
             case ACTION_OFF:
                 controller.turnOff();
+                tile.publishTurnOnTile();
                 break;
             case ACTION_LEVEL:
                 int value = intent.getIntExtra(EXTRA_LEVEL_VALUE, 0);
@@ -81,6 +85,7 @@ public class LightBulbService extends Service {
                 break;
             case ACTION_DISCONNECT:
                 controller.close();
+                tile.publishTurnOnTile();
                 stopSelfHandler.removeCallbacksAndMessages(null);
                 stopSelf();
                 break;
