@@ -1,3 +1,8 @@
 <resources>
     <string name="app_name">Light Bulb Example</string>
+
+    <string name="tile.description">Control your light bulb</string>
+    <string name="tile.label.on">Turn on</string>
+    <string name="tile.label.off">Turn off</string>
+
 </resources>
