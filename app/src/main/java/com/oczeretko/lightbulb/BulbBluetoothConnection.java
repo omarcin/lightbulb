@@ -65,12 +65,19 @@ public class BulbBluetoothConnection {
             bulbGatt.close();
             bulbGatt = null;
         }
-        if (leScanner != null) {
-            leScanner.stopScan(scanCallback);
-            leScanner = null;
-        }
+        tryStopLeScan();
         if (wasBluetoothDisabled) {
             bluetoothAdapter.disable();
+        }
+    }
+
+    private void tryStopLeScan() {
+        if (leScanner != null) {
+            try {
+                leScanner.stopScan(scanCallback);
+                leScanner = null;
+            } catch (IllegalStateException ex) {
+            }
         }
     }
 
@@ -90,10 +97,7 @@ public class BulbBluetoothConnection {
 
     private void onScanTimeout() {
         Log.d(TAG, "ble scan timeout");
-        if (leScanner != null) {
-            leScanner.stopScan(scanCallback);
-            leScanner = null;
-        }
+        tryStopLeScan();
         listener.onBulbDisconnected();
     }
 
