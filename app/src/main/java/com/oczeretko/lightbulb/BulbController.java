@@ -31,6 +31,7 @@ public class BulbController {
     }
 
     public void close() {
+        isIdle = false;
         commands.clear();
         if (connection != null) {
             connection.close();
@@ -91,7 +92,6 @@ public class BulbController {
 
         @Override
         public void onBulbDisconnected() {
-            // TODO
             close();
         }
 
