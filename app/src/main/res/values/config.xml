@@ -3,4 +3,9 @@
     <integer name="service.lightbulb.ttlinmillis">90000</integer>
     <integer name="bluetooth.scan_time_millis">40000</integer>
     <integer name="bulbanimator.animation_steps">30</integer>
+
+    <integer name="broadcast.alarm.animation_time">180000</integer>
+    <integer name="broadcast.alarm.light_level_start">1</integer>
+    <integer name="broadcast.alarm.light_level_end">100</integer>
+
 </resources>

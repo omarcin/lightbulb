@@ -1,13 +1,13 @@
 package com.oczeretko.lightbulb;
 
-import android.content.BroadcastReceiver;
-import android.content.Context;
-import android.content.Intent;
-import android.text.format.*;
+import android.content.*;
 
 public class AlarmBroadcastReceiver extends BroadcastReceiver {
     @Override
     public void onReceive(Context context, Intent intent) {
-        context.startService(LightBulbService.getIntentAnimateLevel(context, 1, 100, 3 * DateUtils.MINUTE_IN_MILLIS));
+        int lightStart = context.getResources().getInteger(R.integer.broadcast_alarm_light_level_start);
+        int lightEnd = context.getResources().getInteger(R.integer.broadcast_alarm_light_level_end);
+        int animationTime = context.getResources().getInteger(R.integer.broadcast_alarm_animation_time);
+        context.startService(LightBulbService.getIntentAnimateLevel(context, lightStart, lightEnd, animationTime));
     }
 }

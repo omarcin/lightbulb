@@ -19,7 +19,6 @@ public class BulbNotificationProvider {
         NotificationCompat.Builder builder = new NotificationCompat.Builder(context)
                                                  .setOngoing(true)
                                                  .setOnlyAlertOnce(true)
-                                                 .setColor(context.getResources().getColor(R.color.colorPrimary))
                                                  .setSmallIcon(R.drawable.ic_wb_incandescent_black_24dp)
                                                  .setContentTitle(context.getString(R.string.notification_title))
                                                  .setContentIntent(pendingIntent)
@@ -28,15 +27,19 @@ public class BulbNotificationProvider {
         switch (status) {
             case Disconnected:
                 builder.setContentText(context.getString(R.string.notification_description_error))
-                       .addAction(getActionTurnOn());
+                       .setColor(context.getResources().getColor(R.color.colorAccent))
+                       .addAction(getActionTurnOn())
+                       .setOngoing(false);
                 break;
             case Connected:
                 builder.setContentText(context.getString(R.string.notification_description_connected))
+                       .setColor(context.getResources().getColor(R.color.colorPrimary))
                        .addAction(isBulbOn ? getActionTurnOff() : getActionTurnOn())
                        .addAction(getActionDisconnect());
                 break;
             case Connecting:
                 builder.setContentText(context.getString(R.string.notification_description_connecting))
+                       .setColor(context.getResources().getColor(R.color.grey))
                        .addAction(getActionDisconnect());
                 break;
         }
