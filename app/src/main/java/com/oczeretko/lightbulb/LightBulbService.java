@@ -16,6 +16,10 @@ public class LightBulbService extends Service implements StatusChangedListener {
     private final static String ACTION_DISCONNECT = "LightBulbService.DISCONNECT";
     private final static String ACTION_LEVEL = "LightBulbService.LEVEL";
     private final static String EXTRA_LEVEL_VALUE = "LightBulbService.LEVEL_VALUE";
+    private final static String ACTION_LEVEL_ANIMATE = "LightBulbService.LEVEL_ANIMATE";
+    private final static String EXTRA_LEVEL_ANIMATE_START_VALUE = "LightBulbService.LEVEL_VALUE_START";
+    private final static String EXTRA_LEVEL_ANIMATE_END_VALUE = "LightBulbService.LEVEL_VALUE_END";
+    private final static String EXTRA_LEVEL_ANIMATE_TIME = "LightBulbService.TIME";
 
     public static Intent getIntentTurnOn(Context context) {
         return getIntentWithAction(context, ACTION_ON);
@@ -32,6 +36,14 @@ public class LightBulbService extends Service implements StatusChangedListener {
     public static Intent getIntentSetLevel(Context context, int lightLevel) {
         Intent intent = getIntentWithAction(context, ACTION_LEVEL);
         intent.putExtra(EXTRA_LEVEL_VALUE, lightLevel);
+        return intent;
+    }
+
+    public static Intent getIntentAnimateLevel(Context context, int startLevel, int endLevel, long timeMillis) {
+        Intent intent = getIntentWithAction(context, ACTION_LEVEL_ANIMATE);
+        intent.putExtra(EXTRA_LEVEL_ANIMATE_START_VALUE, startLevel);
+        intent.putExtra(EXTRA_LEVEL_ANIMATE_END_VALUE, endLevel);
+        intent.putExtra(EXTRA_LEVEL_ANIMATE_TIME, timeMillis);
         return intent;
     }
 
@@ -93,6 +105,15 @@ public class LightBulbService extends Service implements StatusChangedListener {
                 showNotification(controller.getStatus());
                 controller.setListener(this);
                 controller.setLevel(value);
+                break;
+            case ACTION_LEVEL_ANIMATE:
+                isBulbOn = true;
+                int valueStart = intent.getIntExtra(EXTRA_LEVEL_ANIMATE_START_VALUE, 0);
+                int valueEnd = intent.getIntExtra(EXTRA_LEVEL_ANIMATE_END_VALUE, 100);
+                long time = intent.getLongExtra(EXTRA_LEVEL_ANIMATE_TIME, 1000);
+                showNotification(controller.getStatus());
+                controller.setListener(this);
+                controller.animateLevel(valueStart, valueEnd, time);
                 break;
             case ACTION_DISCONNECT:
                 controller.setListener(null);

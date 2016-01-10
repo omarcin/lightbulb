@@ -77,6 +77,10 @@ public class BulbController {
         queueCommand(COMMAND_OFF);
     }
 
+    public void animateLevel(int valueStart, int valueEnd, long time) {
+
+    }
+
     private void queueCommand(byte[] command) {
         ensureConnection();
         commands.offer(command);

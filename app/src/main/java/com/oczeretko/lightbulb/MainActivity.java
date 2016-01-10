@@ -2,6 +2,7 @@ package com.oczeretko.lightbulb;
 
 import android.os.*;
 import android.support.v7.app.*;
+import android.text.format.*;
 import android.view.*;
 
 public class MainActivity extends AppCompatActivity {
@@ -30,6 +31,11 @@ public class MainActivity extends AppCompatActivity {
 
     public void turn100(View view) {
         startService(LightBulbService.getIntentSetLevel(this, 100));
+    }
+
+    public void animate(View view) {
+
+        startService(LightBulbService.getIntentAnimateLevel(this, 1, 100, DateUtils.MINUTE_IN_MILLIS));
     }
 
     public void turnOn(View view) {

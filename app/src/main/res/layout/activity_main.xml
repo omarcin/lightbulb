@@ -58,6 +58,15 @@
     <Button
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
+        android:onClick="animate"
+        android:text="Animate 1% - 100%"
+        />
+    <android.support.v4.widget.Space
+        android:layout_width="match_parent"
+        android:layout_height="16dp"/>
+    <Button
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
         android:onClick="disconnect"
         android:text="Disconnect"
         />
