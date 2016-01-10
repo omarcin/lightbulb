@@ -5,7 +5,9 @@ import android.content.*;
 import android.os.*;
 import android.util.*;
 
-public class LightBulbService extends Service {
+import com.oczeretko.lightbulb.BulbController.*;
+
+public class LightBulbService extends Service implements StatusChangedListener {
 
     private final static String TAG = "LightBulbService";
 
@@ -42,10 +44,12 @@ public class LightBulbService extends Service {
     private BulbController controller;
     private BulbNotificationProvider notificationProvider;
     private int timeToLiveMillis;
+    private boolean isBulbOn;
 
     private final Handler stopSelfHandler = new Handler(msg -> {
         Log.d(TAG, "Handler - stopping service.");
         if (controller != null) {
+            controller.setListener(null);
             controller.close();
         }
         stopForeground(true);
@@ -72,19 +76,26 @@ public class LightBulbService extends Service {
 
         switch (intent.getAction()) {
             case ACTION_ON:
+                isBulbOn = true;
+                showNotification(controller.getStatus());
+                controller.setListener(this);
                 controller.turnOn();
-                startForeground(R.string.id_notification, notificationProvider.getNotification(true));
                 break;
             case ACTION_OFF:
+                isBulbOn = false;
+                showNotification(controller.getStatus());
+                controller.setListener(this);
                 controller.turnOff();
-                startForeground(R.string.id_notification, notificationProvider.getNotification(false));
                 break;
             case ACTION_LEVEL:
+                isBulbOn = true;
                 int value = intent.getIntExtra(EXTRA_LEVEL_VALUE, 0);
+                showNotification(controller.getStatus());
+                controller.setListener(this);
                 controller.setLevel(value);
-                startForeground(R.string.id_notification, notificationProvider.getNotification(true));
                 break;
             case ACTION_DISCONNECT:
+                controller.setListener(null);
                 controller.close();
                 stopSelfHandler.removeCallbacksAndMessages(null);
                 stopForeground(true);
@@ -98,7 +109,9 @@ public class LightBulbService extends Service {
     public void onDestroy() {
         super.onDestroy();
         Log.d(TAG, "onDestroy");
+        stopForeground(true);
         stopSelfHandler.removeCallbacksAndMessages(null);
+        controller.setListener(null);
         controller.close();
         controller = null;
     }
@@ -106,5 +119,15 @@ public class LightBulbService extends Service {
     @Override
     public IBinder onBind(Intent intent) {
         throw new UnsupportedOperationException("Not a bound service");
+    }
+
+    @Override
+    public void onStatusChanged(Status newStatus) {
+        showNotification(newStatus);
+    }
+
+    private void showNotification(Status newStatus) {
+        Notification notification = notificationProvider.getNotification(newStatus, isBulbOn);
+        startForeground(R.string.id_notification, notification);
     }
 }

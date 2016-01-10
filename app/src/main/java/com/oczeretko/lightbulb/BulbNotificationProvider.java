@@ -2,7 +2,7 @@ package com.oczeretko.lightbulb;
 
 import android.app.*;
 import android.content.*;
-import android.support.v7.app.*;
+import android.support.v4.app.*;
 
 public class BulbNotificationProvider {
 
@@ -12,22 +12,37 @@ public class BulbNotificationProvider {
         this.context = context.getApplicationContext();
     }
 
-    public Notification getNotification(boolean isOn) {
+    public Notification getNotification(BulbController.Status status, boolean isBulbOn) {
         Intent intent = new Intent(context, MainActivity.class);
         PendingIntent pendingIntent = PendingIntent.getActivity(context, 0, intent, PendingIntent.FLAG_UPDATE_CURRENT);
 
-        return new NotificationCompat.Builder(context)
-                   .setOngoing(true)
-                   .setOnlyAlertOnce(true)
-                   .setColor(context.getResources().getColor(R.color.colorPrimary))
-                   .setSmallIcon(R.drawable.ic_wb_incandescent_black_24dp)
-                   .setContentTitle(context.getString(R.string.notification_title))
-                   .setContentText(context.getString(R.string.notification_description_connecting))
-                   .setContentIntent(pendingIntent)
-                   .addAction(isOn ? getActionTurnOff() : getActionTurnOn())
-                   .addAction(getActionDisconnect())
-                   .setVisibility(NotificationCompat.VISIBILITY_PUBLIC)
-                   .build();
+        NotificationCompat.Builder builder = new NotificationCompat.Builder(context)
+                                                 .setOngoing(true)
+                                                 .setOnlyAlertOnce(true)
+                                                 .setColor(context.getResources().getColor(R.color.colorPrimary))
+                                                 .setSmallIcon(R.drawable.ic_wb_incandescent_black_24dp)
+                                                 .setContentTitle(context.getString(R.string.notification_title))
+                                                 .setContentIntent(pendingIntent)
+                                                 .setVisibility(NotificationCompat.VISIBILITY_PUBLIC);
+
+        switch (status) {
+            case Disconnected:
+                builder.setContentText(context.getString(R.string.notification_description_error))
+                       .addAction(getActionTurnOn());
+                break;
+            case Connected:
+                builder.setContentText(context.getString(R.string.notification_description_connected))
+                       .addAction(isBulbOn ? getActionTurnOff() : getActionTurnOn())
+                       .addAction(getActionDisconnect());
+                break;
+            case Connecting:
+                builder.setContentText(context.getString(R.string.notification_description_connecting))
+                       .addAction(getActionDisconnect());
+                break;
+        }
+
+
+        return builder.build();
     }
 
     private NotificationCompat.Action getActionTurnOff() {

@@ -6,37 +6,67 @@ import java.util.*;
 
 public class BulbController {
 
+    public enum Status {
+        Disconnected,
+        Connecting,
+        Connected
+    }
+
+    public interface StatusChangedListener {
+        void onStatusChanged(Status newStatus);
+    }
+
     private final static int MAX_LEVEL = 100;
+
     private final static int MIN_LEVEL = 1;
-
     private final static int MAX_VALUE = 0xFF;
+
     private final static int MIN_VALUE = 0x25;
-
     private final static byte[] COMMAND_INIT1 = {33, 0, 0, 0, 0, 0, 0, 0, 0};
-    private final static byte[] COMMAND_INIT2 = {21, 0, 0, 0, 0, 0, 0, 0, 0};
 
+    private final static byte[] COMMAND_INIT2 = {21, 0, 0, 0, 0, 0, 0, 0, 0};
     private final static int COMMAND_INDEX_LIGHT_LEVEL = 4;
+
     private final static byte[] COMMAND_TEMPLATE = {20, 0, 0, 0, 0 /* light level */, 0, 0, 0, 0};
     private final static byte[] COMMAND_ON = commandForLightLevel(MAX_LEVEL);
     private final static byte[] COMMAND_OFF = commandForLightLevel(0);
-
     private final Context context;
+
     private final BulbBluetoothConnectionListener connectionListener = new BulbBluetoothConnectionListener();
     private BulbBluetoothConnection connection;
     private final Queue<byte[]> commands = new LinkedList<>();
     private boolean isIdle;
+    private StatusChangedListener listener;
+    private Status status;
 
     public BulbController(Context context) {
         this.context = context;
+        status = Status.Disconnected;
     }
 
     public void close() {
         isIdle = false;
+        setStatus(Status.Disconnected);
         commands.clear();
         if (connection != null) {
             connection.close();
             connection = null;
         }
+    }
+
+    public void setListener(StatusChangedListener listener) {
+        this.listener = listener;
+    }
+
+    private void setStatus(Status newStatus) {
+        status = newStatus;
+        if (listener != null) {
+            listener.onStatusChanged(status);
+        }
+    }
+
+    public Status getStatus() {
+        return status;
     }
 
     public void turnOn() {
@@ -58,6 +88,7 @@ public class BulbController {
             isIdle = false;
             connection = new BulbBluetoothConnection(context, connectionListener);
             connection.open();
+            setStatus(Status.Connecting);
             commands.offer(COMMAND_INIT1);
             commands.offer(COMMAND_INIT2);
         }
@@ -87,6 +118,7 @@ public class BulbController {
         @Override
         public void onBulbConnected() {
             isIdle = true;
+            setStatus(Status.Connected);
             executeIfReady();
         }
 
