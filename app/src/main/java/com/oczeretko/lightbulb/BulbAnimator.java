@@ -6,7 +6,6 @@ import android.os.*;
 public class BulbAnimator implements BulbController.StatusChangedListener {
 
     private static final int WHAT_FINISH = -123;
-    private final Context context;
     private final BulbController controller;
     private final int startLevel;
     private final int endLevel;
@@ -17,7 +16,6 @@ public class BulbAnimator implements BulbController.StatusChangedListener {
     private boolean doneScheduling;
 
     private BulbAnimator(Context context, BulbController controller, int startLevel, int endLevel, long time) {
-        this.context = context;
         this.controller = controller;
         this.startLevel = startLevel;
         this.endLevel = endLevel;

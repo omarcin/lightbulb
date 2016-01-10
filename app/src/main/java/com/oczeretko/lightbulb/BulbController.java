@@ -17,21 +17,17 @@ public class BulbController {
     }
 
     private final static int MAX_LEVEL = 100;
-
     private final static int MIN_LEVEL = 1;
     private final static int MAX_VALUE = 0xFF;
-
     private final static int MIN_VALUE = 0x25;
     private final static byte[] COMMAND_INIT1 = {33, 0, 0, 0, 0, 0, 0, 0, 0};
-
     private final static byte[] COMMAND_INIT2 = {21, 0, 0, 0, 0, 0, 0, 0, 0};
     private final static int COMMAND_INDEX_LIGHT_LEVEL = 4;
-
     private final static byte[] COMMAND_TEMPLATE = {20, 0, 0, 0, 0 /* light level */, 0, 0, 0, 0};
     private final static byte[] COMMAND_ON = commandForLightLevel(MAX_LEVEL);
     private final static byte[] COMMAND_OFF = commandForLightLevel(0);
-    private final Context context;
 
+    private final Context context;
     private final BulbBluetoothConnectionListener connectionListener = new BulbBluetoothConnectionListener();
     private BulbBluetoothConnection connection;
     private final Queue<byte[]> commands = new LinkedList<>();
