@@ -20,12 +20,13 @@ public class BulbNotificationProvider {
                    .setOngoing(true)
                    .setOnlyAlertOnce(true)
                    .setColor(context.getResources().getColor(R.color.colorPrimary))
-                   .setSmallIcon(R.mipmap.ic_launcher)
+                   .setSmallIcon(R.drawable.ic_wb_incandescent_black_24dp)
                    .setContentTitle(context.getString(R.string.notification_title))
                    .setContentText(context.getString(R.string.notification_description_connecting))
                    .setContentIntent(pendingIntent)
                    .addAction(isOn ? getActionTurnOff() : getActionTurnOn())
                    .addAction(getActionDisconnect())
+                   .setVisibility(NotificationCompat.VISIBILITY_PUBLIC)
                    .build();
     }
 

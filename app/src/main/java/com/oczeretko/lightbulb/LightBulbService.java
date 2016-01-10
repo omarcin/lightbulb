@@ -87,7 +87,7 @@ public class LightBulbService extends Service {
             case ACTION_DISCONNECT:
                 controller.close();
                 stopSelfHandler.removeCallbacksAndMessages(null);
-                stopForeground(false);
+                stopForeground(true);
                 break;
         }
 
