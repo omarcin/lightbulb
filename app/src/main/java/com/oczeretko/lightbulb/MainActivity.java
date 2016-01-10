@@ -12,6 +12,10 @@ public class MainActivity extends AppCompatActivity {
         setContentView(R.layout.activity_main);
     }
 
+    public void turn1(View view) {
+        startService(LightBulbService.getIntentSetLevel(this, 1));
+    }
+
     public void turn25(View view) {
         startService(LightBulbService.getIntentSetLevel(this, 25));
     }
