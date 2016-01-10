@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-    <integer name="service.lightbulb.ttlinmillis">120000</integer>
-    <integer name="bluetooth.scan_time_millis">15000</integer>
+    <integer name="service.lightbulb.ttlinmillis">90000</integer>
+    <integer name="bluetooth.scan_time_millis">40000</integer>
     <integer name="bulbanimator.animation_steps">30</integer>
 </resources>
