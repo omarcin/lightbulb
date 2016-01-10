@@ -1,3 +1,13 @@
 <resources>
     <string name="app_name">Light Bulb Example</string>
+
+    <string name="notification.title">Light Bulb</string>
+    <string name="notification.description.connecting">Connecting...</string>
+    <string name="notification.description.connected">Connected</string>
+    <string name="notification.description.error">Connection lost</string>
+
+    <string name="notification.action.on">On</string>
+    <string name="notification.action.off">Off</string>
+    <string name="notification.action.disconnect">Disconnect</string>
+
 </resources>

@@ -40,6 +40,7 @@ public class LightBulbService extends Service {
     }
 
     private BulbController controller;
+    private BulbNotificationProvider notificationProvider;
     private int timeToLiveMillis;
 
     private final Handler stopSelfHandler = new Handler(msg -> {
@@ -47,7 +48,7 @@ public class LightBulbService extends Service {
         if (controller != null) {
             controller.close();
         }
-        stopSelf();
+        stopForeground(true);
         return true;
     });
 
@@ -56,6 +57,7 @@ public class LightBulbService extends Service {
         super.onCreate();
         Log.d(TAG, "onCreate");
         controller = new BulbController(this);
+        notificationProvider = new BulbNotificationProvider(this);
         timeToLiveMillis = getResources().getInteger(R.integer.service_lightbulb_ttlinmillis);
     }
 
@@ -71,18 +73,21 @@ public class LightBulbService extends Service {
         switch (intent.getAction()) {
             case ACTION_ON:
                 controller.turnOn();
+                startForeground(R.string.id_notification, notificationProvider.getNotification(true));
                 break;
             case ACTION_OFF:
                 controller.turnOff();
+                startForeground(R.string.id_notification, notificationProvider.getNotification(false));
                 break;
             case ACTION_LEVEL:
                 int value = intent.getIntExtra(EXTRA_LEVEL_VALUE, 0);
                 controller.setLevel(value);
+                startForeground(R.string.id_notification, notificationProvider.getNotification(true));
                 break;
             case ACTION_DISCONNECT:
                 controller.close();
                 stopSelfHandler.removeCallbacksAndMessages(null);
-                stopSelf();
+                stopForeground(false);
                 break;
         }
 
