@@ -1,6 +1,7 @@
 package com.oczeretko.lightbulb;
 
 import android.content.*;
+import android.os.*;
 
 import java.util.*;
 
@@ -35,18 +36,29 @@ public class BulbController {
     private final BulbBluetoothConnectionListener connectionListener = new BulbBluetoothConnectionListener();
     private BulbBluetoothConnection connection;
     private final Queue<byte[]> commands = new LinkedList<>();
+    private final Handler commandsHandler;
     private boolean isIdle;
     private StatusChangedListener listener;
     private Status status;
+    private final int animationSteps;
 
     public BulbController(Context context) {
         this.context = context;
+        commandsHandler = new Handler(context.getMainLooper(), this::handleCommandMessage);
         status = Status.Disconnected;
+        animationSteps = context.getResources().getInteger(R.integer.controller_bulb_animation_steps);
+    }
+
+    private boolean handleCommandMessage(Message message) {
+        int level = message.what;
+        queueCommand(commandForLightLevel(level));
+        return true;
     }
 
     public void close() {
         isIdle = false;
         setStatus(Status.Disconnected);
+        commandsHandler.removeCallbacksAndMessages(null);
         commands.clear();
         if (connection != null) {
             connection.close();
@@ -70,15 +82,28 @@ public class BulbController {
     }
 
     public void turnOn() {
+        commandsHandler.removeCallbacksAndMessages(null);
         queueCommand(COMMAND_ON);
     }
 
     public void turnOff() {
+        commandsHandler.removeCallbacksAndMessages(null);
         queueCommand(COMMAND_OFF);
     }
 
-    public void animateLevel(int valueStart, int valueEnd, long time) {
+    public void setLevel(int lightLevel) {
+        lightLevel = Math.min(Math.max(lightLevel, MIN_LEVEL), MAX_LEVEL);
+        byte[] command = commandForLightLevel(lightLevel);
+        commandsHandler.removeCallbacksAndMessages(null);
+        queueCommand(command);
+    }
 
+    public void animateLevel(int valueStart, int valueEnd, long time) {
+        for (int i = 1; i <= animationSteps; i++) {
+            int value = (int)((double)i * (valueEnd - valueStart) / animationSteps + valueStart);
+            long delay = (long)((double)(i - 1) / animationSteps * time);
+            commandsHandler.sendEmptyMessageDelayed(value, delay);
+        }
     }
 
     private void queueCommand(byte[] command) {
@@ -102,12 +127,6 @@ public class BulbController {
         if (isIdle && !commands.isEmpty()) {
             connection.sendCommand(commands.poll());
         }
-    }
-
-    public void setLevel(int lightLevel) {
-        lightLevel = Math.min(Math.max(lightLevel, MIN_LEVEL), MAX_LEVEL);
-        byte[] command = commandForLightLevel(lightLevel);
-        queueCommand(command);
     }
 
     private static byte[] commandForLightLevel(int lightLevel) {
