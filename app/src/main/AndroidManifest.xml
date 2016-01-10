@@ -1,6 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?>
-<manifest package="com.oczeretko.lightbulb"
-          xmlns:android="http://schemas.android.com/apk/res/android">
+<manifest
+    package="com.oczeretko.lightbulb"
+    xmlns:android="http://schemas.android.com/apk/res/android">
 
     <uses-permission android:name="android.permission.BLUETOOTH"/>
     <uses-permission android:name="android.permission.BLUETOOTH_ADMIN"/>
@@ -24,6 +25,16 @@
             android:enabled="true"
             android:exported="false">
         </service>
+
+        <receiver
+            android:name=".AlarmBroadcastReceiver"
+            android:enabled="true"
+            android:exported="true">
+            <intent-filter>
+                <action android:name="com.android.deskclock.ALARM_ALERT"/>
+            </intent-filter>
+        </receiver>
+
     </application>
 
 </manifest>
