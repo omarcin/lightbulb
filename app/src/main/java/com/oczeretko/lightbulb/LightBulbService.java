@@ -20,6 +20,7 @@ public class LightBulbService extends Service implements StatusChangedListener {
     private final static String EXTRA_LEVEL_ANIMATE_START_VALUE = "LightBulbService.LEVEL_VALUE_START";
     private final static String EXTRA_LEVEL_ANIMATE_END_VALUE = "LightBulbService.LEVEL_VALUE_END";
     private final static String EXTRA_LEVEL_ANIMATE_TIME = "LightBulbService.TIME";
+    private BulbAnimator animator;
 
     public static Intent getIntentTurnOn(Context context) {
         return getIntentWithAction(context, ACTION_ON);
@@ -61,7 +62,7 @@ public class LightBulbService extends Service implements StatusChangedListener {
     private final Handler stopSelfHandler = new Handler(msg -> {
         Log.d(TAG, "Handler - stopping service.");
         if (controller != null) {
-            controller.setListener(null);
+            controller.removeListener(this);
             controller.close();
         }
         stopForeground(true);
@@ -84,26 +85,27 @@ public class LightBulbService extends Service implements StatusChangedListener {
         }
 
         Log.d(TAG, "Received intent " + intent.getAction());
-        stopSelfHandler.sendEmptyMessageDelayed(0, timeToLiveMillis);
+        stopSelfDelayed(timeToLiveMillis);
+        stopAnimations();
 
         switch (intent.getAction()) {
             case ACTION_ON:
                 isBulbOn = true;
                 showNotification(controller.getStatus());
-                controller.setListener(this);
+                controller.addListener(this);
                 controller.turnOn();
                 break;
             case ACTION_OFF:
                 isBulbOn = false;
                 showNotification(controller.getStatus());
-                controller.setListener(this);
+                controller.addListener(this);
                 controller.turnOff();
                 break;
             case ACTION_LEVEL:
                 isBulbOn = true;
                 int value = intent.getIntExtra(EXTRA_LEVEL_VALUE, 0);
                 showNotification(controller.getStatus());
-                controller.setListener(this);
+                controller.addListener(this);
                 controller.setLevel(value);
                 break;
             case ACTION_LEVEL_ANIMATE:
@@ -112,11 +114,12 @@ public class LightBulbService extends Service implements StatusChangedListener {
                 int valueEnd = intent.getIntExtra(EXTRA_LEVEL_ANIMATE_END_VALUE, 100);
                 long time = intent.getLongExtra(EXTRA_LEVEL_ANIMATE_TIME, 1000);
                 showNotification(controller.getStatus());
-                controller.setListener(this);
-                controller.animateLevel(valueStart, valueEnd, time);
+                controller.addListener(this);
+                animator = BulbAnimator.startAnimating(this, controller, valueStart, valueEnd, time);
+                stopSelfDelayed(time + timeToLiveMillis);
                 break;
             case ACTION_DISCONNECT:
-                controller.setListener(null);
+                controller.removeListener(this);
                 controller.close();
                 stopSelfHandler.removeCallbacksAndMessages(null);
                 stopForeground(true);
@@ -126,13 +129,18 @@ public class LightBulbService extends Service implements StatusChangedListener {
         return START_NOT_STICKY;
     }
 
+    private void stopSelfDelayed(long delayMillis) {
+        stopSelfHandler.removeMessages(0);
+        stopSelfHandler.sendEmptyMessageDelayed(0, delayMillis);
+    }
+
     @Override
     public void onDestroy() {
         super.onDestroy();
         Log.d(TAG, "onDestroy");
         stopForeground(true);
         stopSelfHandler.removeCallbacksAndMessages(null);
-        controller.setListener(null);
+        controller.removeListener(this);
         controller.close();
         controller = null;
     }
@@ -150,5 +158,12 @@ public class LightBulbService extends Service implements StatusChangedListener {
     private void showNotification(Status newStatus) {
         Notification notification = notificationProvider.getNotification(newStatus, isBulbOn);
         startForeground(R.string.id_notification, notification);
+    }
+
+    private void stopAnimations() {
+        if (animator != null) {
+            animator.cancel();
+            animator = null;
+        }
     }
 }

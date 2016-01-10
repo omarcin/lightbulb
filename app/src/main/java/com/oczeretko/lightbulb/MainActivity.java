@@ -34,8 +34,7 @@ public class MainActivity extends AppCompatActivity {
     }
 
     public void animate(View view) {
-
-        startService(LightBulbService.getIntentAnimateLevel(this, 1, 100, DateUtils.MINUTE_IN_MILLIS));
+        startService(LightBulbService.getIntentAnimateLevel(this, 1, 100, 40 * DateUtils.SECOND_IN_MILLIS));
     }
 
     public void turnOn(View view) {

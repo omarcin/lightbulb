@@ -2,5 +2,5 @@
 <resources>
     <integer name="service.lightbulb.ttlinmillis">120000</integer>
     <integer name="bluetooth.scan_time_millis">15000</integer>
-    <integer name="controller.bulb.animation_steps">10</integer>
+    <integer name="bulbanimator.animation_steps">30</integer>
 </resources>
