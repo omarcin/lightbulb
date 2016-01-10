@@ -1,4 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
     <integer name="service.lightbulb.ttlinmillis">60000</integer>
+    <integer name="bluetooth.scan_time_millis">30000</integer>
 </resources>

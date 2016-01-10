@@ -4,7 +4,6 @@ import android.bluetooth.*;
 import android.bluetooth.le.*;
 import android.content.*;
 import android.os.*;
-import android.text.format.*;
 import android.util.*;
 
 import java.util.*;
@@ -21,7 +20,6 @@ public class BulbBluetoothConnection {
         void onBulbCommandSent();
     }
 
-    private static final long SCAN_TIME = 30 * DateUtils.SECOND_IN_MILLIS;
     private static final UUID SERVICE_ID = UUID.fromString("0000fe02-0000-1000-8000-00805f9b34fb");
     private static final UUID CHARACTERISTIC_ID = UUID.fromString("0000ffe1-0000-1000-8000-00805f9b34fb");
 
@@ -35,10 +33,12 @@ public class BulbBluetoothConnection {
     private BluetoothStateChangedReceiver stateChangedReceiver;
     private final Context context;
     private final Listener listener;
+    private final long scanTimeMillis;
 
     public BulbBluetoothConnection(Context context, Listener listener) {
         this.context = context;
         this.listener = new ListenerUiThreadAdapter(listener);
+        scanTimeMillis = context.getResources().getInteger(R.integer.service_lightbulb_ttlinmillis);
     }
 
     public void open() {
@@ -89,7 +89,7 @@ public class BulbBluetoothConnection {
             ScanFilter scanFilter = new ScanFilter.Builder().setServiceUuid(new ParcelUuid(SERVICE_ID)).build();
             ScanSettings scanSettings = new ScanSettings.Builder().setScanMode(ScanSettings.SCAN_MODE_BALANCED).build();
             leScanner.startScan(Arrays.asList(scanFilter), scanSettings, scanCallback);
-            handler.postDelayed(this::onScanTimeout, SCAN_TIME);
+            handler.postDelayed(this::onScanTimeout, scanTimeMillis);
         } else {
             Log.d(TAG, "Already scanning");
         }
