@@ -10,8 +10,6 @@ import java.util.*;
 
 public class BulbBluetoothConnection {
 
-    private static final String TAG = "BulbConnection";
-
     public interface Listener {
         void onBulbConnected();
 
@@ -20,13 +18,14 @@ public class BulbBluetoothConnection {
         void onBulbCommandSent();
     }
 
+    private static final String TAG = "BulbConnection";
     private static final UUID SERVICE_ID = UUID.fromString("0000fe02-0000-1000-8000-00805f9b34fb");
     private static final UUID CHARACTERISTIC_ID = UUID.fromString("0000ffe1-0000-1000-8000-00805f9b34fb");
 
     private BluetoothAdapter bluetoothAdapter;
     private BluetoothLeScanner leScanner;
     private BluetoothGatt bulbGatt;
-    private boolean wasBluetoothDisabled;
+    private boolean disableBluetoothOnClose;
 
     private final Handler handler = new Handler();
     private final BluetoothScanCallback scanCallback = new BluetoothScanCallback();
@@ -47,7 +46,7 @@ public class BulbBluetoothConnection {
         BluetoothManager bluetoothManager = (BluetoothManager)context.getSystemService(Context.BLUETOOTH_SERVICE);
         bluetoothAdapter = bluetoothManager.getAdapter();
         if (bluetoothAdapter.getState() != BluetoothAdapter.STATE_ON) {
-            wasBluetoothDisabled = true;
+            disableBluetoothOnClose = true;
             bluetoothAdapter.enable();
         } else {
             onBluetoothEnabled();
@@ -66,7 +65,7 @@ public class BulbBluetoothConnection {
             bulbGatt = null;
         }
         tryStopLeScan();
-        if (wasBluetoothDisabled) {
+        if (disableBluetoothOnClose) {
             bluetoothAdapter.disable();
         }
     }
@@ -103,7 +102,7 @@ public class BulbBluetoothConnection {
 
     private void onBluetoothDisabled() {
         Log.d(TAG, "on Bluetooth disabled");
-        wasBluetoothDisabled = false;
+        disableBluetoothOnClose = false;
         listener.onBulbDisconnected();
     }
 

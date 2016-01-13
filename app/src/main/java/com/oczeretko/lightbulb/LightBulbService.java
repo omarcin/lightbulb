@@ -20,7 +20,6 @@ public class LightBulbService extends Service implements StatusChangedListener {
     private final static String EXTRA_LEVEL_ANIMATE_START_VALUE = "LightBulbService.LEVEL_VALUE_START";
     private final static String EXTRA_LEVEL_ANIMATE_END_VALUE = "LightBulbService.LEVEL_VALUE_END";
     private final static String EXTRA_LEVEL_ANIMATE_TIME = "LightBulbService.TIME";
-    private BulbAnimator animator;
 
     public static Intent getIntentTurnOn(Context context) {
         return getIntentWithAction(context, ACTION_ON);
@@ -56,6 +55,7 @@ public class LightBulbService extends Service implements StatusChangedListener {
 
     private BulbController controller;
     private BulbNotificationProvider notificationProvider;
+    private BulbAnimator animator;
     private int timeToLiveMillis;
     private boolean isBulbOn;
 

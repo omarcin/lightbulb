@@ -43,9 +43,10 @@ public class BulbAnimator implements BulbController.StatusChangedListener {
     }
 
     private void scheduleAnimation() {
-        for (int i = 2; i <= animationSteps; i++) {
-            int level = (int)((double)i * (endLevel - startLevel) / animationSteps + startLevel);
-            long delay = (long)((double)(i - 1) / animationSteps * time);
+        for (int i = 1; i <= animationSteps; i++) {
+            double fraction = (double)i / animationSteps;
+            int level = (int)(fraction * (endLevel - startLevel) + startLevel);
+            long delay = (long)(fraction * time);
             handler.sendEmptyMessageDelayed(level, delay);
         }
         handler.sendEmptyMessageDelayed(WHAT_FINISH, time + 1);
