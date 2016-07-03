@@ -8,7 +8,7 @@ Main classes:
 - BulbAnimator uses a Handler and a BulbController to smoothly change the light level over a specified duration.
 - LightBulbService handles intents to delegate to the BulbController and manages the notifications displayed when the light bulb is being controlled.
 
-The API of the lighbulb was reverse engineered by (slightly) adapting the guide on (adafruit.com)[https://learn.adafruit.com/reverse-engineering-a-bluetooth-low-energy-light-bulb/overview] for my specific light bulb.
+The API of the lighbulb was reverse engineered by (slightly) adapting the guide on [adafruit.com](https://learn.adafruit.com/reverse-engineering-a-bluetooth-low-energy-light-bulb/overview) for my specific light bulb.
 
 ![Activity](meta/activity.png?raw=true "Activity")
 ![Notification](meta/notification.png?raw=true "Notification")
